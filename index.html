@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stellan Smash-like</title>
+  <link rel="preload" href="styles.css" as="style" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Main Menu -->
+  <div id="menu" class="screen">
+    <h1>Stellan Smash-like</h1>
+    <div class="menu-buttons">
+      <button id="btn-versus">1v1 Local</button>
+      <button id="btn-tournament">Tournoi</button>
+      <button id="btn-help">Contrôles</button>
+    </div>
+    <div class="small">
+      Gamepads auto-détectés (brancher et appuyer sur un bouton).<br/>
+      Clavier fallback : voir « Contrôles ».
+    </div>
+  </div>
+
+  <!-- Character Select -->
+  <div id="select" class="screen hidden">
+    <h2>Sélection des personnages</h2>
+    <div class="select-grid" id="char-grid">
+      <!-- 11 cases générées par JS : Personnage 1..11 -->
+    </div>
+    <div class="select-footer">
+      <div class="picks">
+        <div><strong>Joueur 1:</strong> <span id="p1-pick">—</span></div>
+        <div><strong>Joueur 2:</strong> <span id="p2-pick">—</span></div>
+      </div>
+      <button id="btn-start-match" disabled>Lancer le match</button>
+      <button id="btn-back-menu">Retour</button>
+    </div>
+  </div>
+
+  <!-- Tournament Setup -->
+  <div id="tournament-setup" class="screen hidden">
+    <h2>Tournoi</h2>
+    <div class="form-row">
+      <label for="tournament-size">Nombre de joueurs (2-16) :</label>
+      <input id="tournament-size" type="number" min="2" max="16" value="8" />
+    </div>
+    <button id="btn-tournament-players">Choisir les personnages</button>
+    <button id="btn-tournament-back">Retour</button>
+  </div>
+
+  <!-- Tournament Select (players pick in turn) -->
+  <div id="tournament-select" class="screen hidden">
+    <h2>Tournoi — Choix des personnages</h2>
+    <div class="small" id="tournament-instructions">Joueur X, choisis ton personnage</div>
+    <div class="select-grid" id="tournament-char-grid"></div>
+    <div class="select-footer">
+      <div class="picks">
+        <div><strong>Inscriptions :</strong></div>
+        <ol id="tournament-picked"></ol>
+      </div>
+      <button id="btn-tournament-start" disabled>Lancer le tournoi</button>
+    </div>
+  </div>
+
+  <!-- Tournament Bracket / Status -->
+  <div id="tournament-bracket" class="screen hidden">
+    <h2>Arbre du Tournoi</h2>
+    <div id="bracket"></div>
+    <div class="small" id="round-status">Round en cours…</div>
+    <button id="btn-tournament-exit">Quitter le tournoi</button>
+  </div>
+
+  <!-- Help -->
+  <div id="help" class="screen hidden">
+    <h2>Contrôles</h2>
+    <div class="two-col">
+      <div>
+        <h3>Degats</h3>
+        <ul>  
+          <li>Projectile : <strong>5</strong></li>
+          <li>Coup de poing : <strong>11</strong></li>
+          <li>Kick : <strong>8</strong></li>
+          <li>Uppercut : <strong>13</strong></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Manette (auto)</h3>
+        <ul>
+          <li>Stick/D-Pad : déplacement</li>
+          <li>A : saut</li>
+          <li>LB : parade (maintenir)</li>
+          <li>RB : projectile</li>
+          <li>X  : Coup de poing — Y : uppercut — B : kick</li>
+        </ul>
+      </div>
+    </div>
+    <button id="btn-help-back">Retour</button>
+  </div>
+
+  <!-- HUD + Canvas -->
+  <div id="hud" class="hidden">
+    <div class="healthbars">
+      <div class="hb">
+        <div class="name" id="p1-name">J1</div>
+        <div class="bar"><div id="p1-hp" class="fill"></div></div>
+      </div>
+      <div class="hb">
+        <div class="name" id="p2-name">J2</div>
+        <div class="bar"><div id="p2-hp" class="fill"></div></div>
+      </div>
+    </div>
+  </div>
+  <canvas id="game" width="1280" height="720" class="hidden" aria-label="Stellan Smash-like"></canvas>
+
+  <!-- Result overlay -->
+  <div id="overlay" class="hidden">
+    <div id="overlay-text">Victoire Joueur X</div>
+    <div class="overlay-buttons">
+      <button id="btn-rematch">Revanche</button>
+      <button id="btn-select-again">Revenir sélection</button>
+      <button id="btn-menu">Menu</button>
+    </div>
+  </div>
+
+  <script src="game.js" defer></script>
+</body>
+</html>
