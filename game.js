@@ -280,7 +280,7 @@
         idle: "assets/robin/face_robin.png",
         run: "assets/robin/cours_robin.png",
         jump: "assets/robin/saut_robin.png",
-        attack: "assets/robin/coup_droit_robin.png",
+        attack: "assets/robin/coup_poing_robin.png",
         block: "assets/robin/parade_robin.png",
         projectile: "assets/robin/projectile_robin.png",
         upper: "assets/robin/uppercut_robin.png",
@@ -296,7 +296,7 @@
         idle: "assets/thomas/face_plags.png",
         run: "assets/thomas/cours_plags.png",
         jump: "assets/thomas/saut_plags.png",
-        attack: "assets/thomas/coup_droit_plags.png",
+        attack: "assets/thomas/coup_poing_plags.png",
         block: "assets/thomas/parade_plags.png",
         projectile: "assets/thomas/projectile_plags.png",
         upper: "assets/thomas/uppercut_plags.png",
@@ -341,7 +341,7 @@
         idle: "assets/martin/face_martin.png",
         run: "assets/martin/cours_martin.png",
         jump: "assets/martin/saut_martin.png",
-        attack: "assets/martin/coup_droit_martin.png",
+        attack: "assets/martin/coup_poing_martin.png",
         block: "assets/martin/parade_martin.png",
         projectile: "assets/martin/projectile_martin.png",
         upper: "assets/martin/uppercut_martin.png",
@@ -356,7 +356,7 @@
         idle: "assets/tripleJ/face_triplej.png",
         run: "assets/tripleJ/cours_triplej.png",
         jump: "assets/tripleJ/saut_triplej.png",
-        attack: "assets/tripleJ/coup_droit_triplej.png",
+        attack: "assets/tripleJ/coup_poing_triplej.png",
         block: "assets/tripleJ/parade_triplej.png",
         projectile: "assets/tripleJ/projectile_triplej.png",
         upper: "assets/tripleJ/uppercut_triplej.png",
@@ -1237,7 +1237,8 @@
         const pr = p1.tryProjectile(t);
         if (pr) projectiles.push(pr);
       }
-
+}
+if (in2.block == false) {
       if (in2.punch) queueHit(p2.tryAttack("punch", in2, t));
       if (in2.kick) queueHit(p2.tryAttack("kick", in2, t));
       if (in2.upper) queueHit(p2.tryAttack("upper", in2, t));
@@ -1245,7 +1246,7 @@
         const pr = p2.tryProjectile(t);
         if (pr) projectiles.push(pr);
       }
-    }
+}
     // Physique (gère saut normal / flip-reset one-press / double saut)
     p1.updatePhysics();
     p2.updatePhysics();
@@ -1612,7 +1613,6 @@
 
   // ---------- UI wiring ----------
   btnVersus.addEventListener("click", goSelect);
-  btnTournament.addEventListener("click", goTournamentSetup);
   btnHelp.addEventListener("click", goHelp);
   btnHelpBack.addEventListener("click", goMenu);
 
