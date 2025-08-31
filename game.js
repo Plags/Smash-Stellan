@@ -16,10 +16,11 @@
   const MAX_FALL = 10;
   const GROUND_Y = H - 80;
 
+  
   // Plateformes
   const PLATFORMS = [
-    { x: W*0.25 - 150, y: GROUND_Y - 180, w: 300, h: 18 },
-    { x: W*0.75 - 150, y: GROUND_Y - 180, w: 300, h: 18 },
+    { x: W*0.25 - 150, y: GROUND_Y - 260, w: 300, h: 18 },
+    { x: W*0.75 - 150, y: GROUND_Y - 260, w: 300, h: 18 },
   ];
 
   // Murs invisibles
@@ -30,7 +31,7 @@ const WALLS = [
 
   // Combats
   const START_HP = 140;
-  const MOVE_SPEED = 4.0;
+  const MOVE_SPEED = 3.0;
   const JUMP_VY = -16;
   const DOUBLE_JUMP_VY = -16;
   const ATTACK_COOLDOWN = 220;  // ms general swing lock
@@ -40,6 +41,10 @@ const WALLS = [
   const KNOCKBACK_BASE = 9;
   const ATTACK_ANIM_MS = 180;
 
+
+// --- TAILLE 
+const BASE_PLAYER_W = 92;
+const BASE_PLAYER_H = 156;
 
 
 
@@ -51,12 +56,12 @@ const WALL_NEAR_PX = 5;  // ajuste: 14–30 selon feeling
 
 
   // Hitbox (rectangles) distances
-  const HB_PUNCH = { w: 30, h: 20, dx: 34, dy: -10, dmg: 11, kb: 8 };
-  const HB_KICK  = { w: 60, h: 42, dx: 40, dy: 0,  dmg: 8, kb: 12 };
-  const HB_UPPER = { w: 20, h: 20, dx: 24, dy: -28, dmg: 13, kb: 10, launch: UPPERCUT_LAUNCH };
+  const HB_PUNCH = { w: 60, h: 40, dx: 34, dy: -10, dmg: 11, kb: 8 };
+  const HB_KICK  = { w: 120, h: 84, dx: 40, dy: 0,  dmg: 8, kb: 12 };
+  const HB_UPPER = { w: 40, h: 40, dx: 24, dy: -28, dmg: 13, kb: 10, launch: UPPERCUT_LAUNCH };
   const DEBUG_HITBOX = true;
   // Projectile
-  const PROJ = { w: 24, h: 24, speed: 6.5, dmg: 5, kb: 7 };
+  const PROJ = { w: 64, h: 64, speed: 6.5, dmg: 5, kb: 7 };
 
   // World bounds (si on sort -> chute/KO)
   const OUT_MARGIN = 260;
@@ -85,7 +90,8 @@ if (typeof s !== 'function') {
 
   const $ = sel => document.querySelector(sel);
   const elMenu = $("#menu");
-  const elSelect = $("#select");
+  const elSelect = document.getElementById("screen");
+
   const elHUD = $("#hud");
   const elHelp = $("#help");
   const elOverlay = $("#overlay");
@@ -99,8 +105,33 @@ if (typeof s !== 'function') {
   const charGrid = $("#char-grid");
   const p1PickEl = $("#p1-pick");
   const p2PickEl = $("#p2-pick");
-  const btnStartMatch = $("#btn-start-match");
+  const btnEndSelection = $("#btn-start-match");
   const btnBackMenu = $("#btn-back-menu");
+
+  const MAPS = [  "cabanon.png",
+  "chambre_cuck.png",
+  "cuisine.png",
+  "salon.png",
+  "toilette.png",
+  "escalier.png",
+  "daronne_ptf.png"
+]; 
+
+// ===== Elements écran map
+const screenMap   = document.getElementById('screen-map');
+const track       = document.getElementById('map-track');
+const dots        = document.getElementById('map-dots');
+const prev        = document.getElementById('map-prev');
+const next        = document.getElementById('map-next');
+const back        = document.getElementById('map-back');
+const play        = document.getElementById('map-play');
+const gameMapEl   = document.querySelector('.game-map'); 
+document.getElementById('btn-back-menu').addEventListener('click', () => {
+  // cache l’écran persos
+  elSelect.classList.add('hidden');
+  // montre ton menu principal
+  document.getElementById('menu').classList.remove('hidden');
+});
 
   const p1HPFill = $("#p1-hp");
   const p2HPFill = $("#p2-hp");
@@ -126,28 +157,92 @@ if (typeof s !== 'function') {
   const btnTExit = $("#btn-tournament-exit");
   const roundStatus = $("#round-status");
 
+// CARROUSSEL MAP
+  // ===== Vars =====
+let currentSlide = 0;
+
+function buildCarousel() {
+  track.innerHTML = ''; dots.innerHTML = '';
+  MAPS.forEach((name, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'map-slide';
+    slide.innerHTML = `
+      <img src="assets/map/${name}" alt="${name}">
+      <div class="map-caption">${name.replace(/\.[a-z0-9]+$/i,'').replace(/[-_]/g,' ')}</div>
+    `;
+    slide.addEventListener('click', () => snapTo(i));
+    track.appendChild(slide);
+
+    const d = document.createElement('div');
+    d.className = 'map-dot';
+    d.addEventListener('click', () => snapTo(i));
+    dots.appendChild(d);
+  });
+  markActive(0);
+}
+
+function markActive(i) {
+  currentSlide = i;
+  [...track.children].forEach(s => s.classList.remove('is-active'));
+  [...dots.children].forEach(d => d.classList.remove('is-active'));
+  track.children[i]?.classList.add('is-active');
+  dots.children[i]?.classList.add('is-active');
+}
+
+function snapTo(i, smooth = true) {
+  const el = track.children[i];
+  if (!el) return;
+  el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+  markActive(i);
+}
+
+function onScrollActive() {
+  const rect = track.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  let best = 0, dist = Infinity;
+  [...track.children].forEach((s, i) => {
+    const r = s.getBoundingClientRect();
+    const sc = r.left + r.width / 2;
+    const d = Math.abs(cx - sc);
+    if (d < dist) { dist = d; best = i; }
+  });
+  if (best !== currentSlide) markActive(best);
+}
+
+// flèches + scroll
+prev.addEventListener('click', () => snapTo(Math.max(0, currentSlide - 1)));
+next.addEventListener('click', () => snapTo(Math.min(MAPS.length - 1, currentSlide + 1)));
+track.addEventListener('scroll', () => {
+  if (track._t) cancelAnimationFrame(track._t);
+  track._t = requestAnimationFrame(onScrollActive);
+}, { passive: true });
+
+
+
+
   // ---------- Character roster (11 placeholders) ----------
 const ROSTER = [
+  
   {
     id: 1,
-    name: "PTF",
+    name: "👃💵PTF💵👃",
     //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
     sprites: {
         idle: "assets/ptf/face_ptf.png",
-        run: "assets/ptf/cours_droit_ptf.png",
+        run: "assets/ptf/cours_ptf.png",
         jump: "assets/ptf/saut_ptf.png",
-          attack: "assets/ptf/tape_droite_ptf.png",
-        punch:      "assets/ptf/tape_droite_ptf.png",
-        kick:       "assets/ptf/pied_ptf.png",
-        upper:      "assets/ptf/uppercut_ptf.png",
-        block: "assets/ptf/part_droit.png",
+        attack: "assets/ptf/coup_poing_ptf.png",
+        kick: "assets/ptf/coup_pied_ptf.png",
+        upper: "assets/ptf/uppercut_ptf.png",
+        block: "assets/ptf/parade_ptf.png",
         projectile: "assets/ptf/projectile_ptf.png"
+        
        },
     },
 
       {
     id: 2,
-    name: "DRAKS",
+    name: "💩DRAKS💩",
     //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
     sprites: {
          idle: "assets/draks/face_draks.png",
@@ -162,14 +257,138 @@ const ROSTER = [
        },
     
     },
+  {
+    id: 3,
+    name: "🏳️‍🌈~ROBIN~🏳️‍🌈",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/robin/face_robin.png",
+         run: "assets/robin/cours_robin.png",
+         jump: "assets/robin/saut_robin.png",
+         attack: "assets/robin/coup_droit_robin.png",
+         block: "assets/robin/parade_robin.png",
+         projectile: "assets/robin/projectile_robin.png",
+         upper : "assets/robin/uppercut_robin.png",
+         kick:  "assets/robin/coup_pied_robin.png",
+         
+       },
+    
+    },
 
-  // les autres personnages restent placeholders
-  ...Array.from({ length: 10 }).map((_, i) => ({
-    id: i + 2,
-    name: `Personnage ${i + 2}`,
-    color: `hsl(${((i+1)*33)%360}, 70%, 60%)`,
-  }))
-];
+      {
+    id: 4,
+    name: "🍔PLAGS🍔",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/thomas/face_plags.png",
+         run: "assets/thomas/cours_plags.png",
+         jump: "assets/thomas/saut_plags.png",
+         attack: "assets/thomas/coup_droit_plags.png",
+         block: "assets/thomas/parade_plags.png",
+         projectile: "assets/thomas/projectile_plags.png",
+         upper : "assets/thomas/uppercut_plags.png",
+         kick:  "assets/thomas/coup_pied_plags.png",
+         
+       },
+    
+    },
+  {
+    id: 5,
+    name: "🐵 BEN 🐒",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/ben/face_ben.png",
+         run: "assets/ben/cours_ben.png",
+         jump: "assets/ben/saut_ben.png",
+         attack: "assets/ben/coup_droit_ben.png",
+         block: "assets/ben/parade_ben.png",
+         projectile: "assets/ben/projectile_ben.png",
+         upper : "assets/ben/uppercut_ben.png",
+         kick:  "assets/ben/coup_pied_ben.png",
+         
+       },
+    
+    },
+      {
+    id: 6,
+    name: "😡 DENIS 😡",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/denis/face_denis.png",
+         run: "assets/denis/cours_denis.png",
+         jump: "assets/denis/saut_denis.png",
+         attack: "assets/denis/coup_droit_denis.png",
+         block: "assets/denis/parade_denis.png",
+         projectile: "assets/denis/projectile_denis.png",
+         upper : "assets/denis/uppercut_denis.png",
+         kick:  "assets/denis/coup_pied_denis.png",
+         
+       },
+    
+    },
+      {
+    id: 7,
+    name: "🗡️HOZAFID SI IL JOUE PAS GAREN",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/martin/face_martin.png",
+         run: "assets/martin/cours_martin.png",
+         jump: "assets/martin/saut_martin.png",
+         attack: "assets/martin/coup_droit_martin.png",
+         block: "assets/martin/parade_martin.png",
+         projectile: "assets/martin/projectile_martin.png",
+         upper : "assets/martin/uppercut_martin.png",
+         kick:  "assets/martin/coup_pied_martin.png",
+         
+       },
+    
+    },
+      {
+    id: 8,
+    name: "🎬 Triple J (GOLDOOOOR )🎬",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/tripleJ/face_triplej.png",
+         run: "assets/tripleJ/cours_triplej.png",
+         jump: "assets/tripleJ/saut_triplej.png",
+         attack: "assets/tripleJ/coup_droit_triplej.png",
+         block: "assets/tripleJ/parade_triplej.png",
+         projectile: "assets/tripleJ/projectile_triplej.png",
+         upper : "assets/tripleJ/uppercut_triplej.png",
+         kick:  "assets/tripleJ/coup_pied_triplej.png",
+         
+       },
+    
+    },
+    //   {
+    // id:9,
+    // name: "Piggy 🐖",
+    // //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    // sprites: {
+    //      idle: "assets/martin/face_martin.png",
+    //      run: "assets/martin/cours_martin.png",
+    //      jump: "assets/martin/saut_martin.png",
+    //      attack: "assets/martin/coup_droit_martin.png",
+    //      block: "assets/martin/parade_martin.png",
+    //      projectile: "assets/martin/projectile_martin.png",
+    //      upper : "assets/martin/uppercut_martin.png",
+    //      kick:  "assets/martin/coup_pied_martin.png",
+         
+    //    },
+    
+    // },
+    
+    
+
+    
+
+//   // les autres personnages restent placeholders
+//   ...Array.from({ length: 10 }).map((_, i) => ({
+//     id: i + 2,
+//     name: `Personnage ${i + 2}`,
+//     color: `hsl(${((i+1)*33)%360}, 70%, 60%)`,
+//   }))
+ ];
 
   // ---------- Input mapping ----------
   const Keys = {
@@ -195,10 +414,23 @@ function getCachedImage(src) {
   if (!src) return null;
   if (_imgCache.has(src)) return _imgCache.get(src);
   const im = new Image();
-  im.src = src;            // le chargement démarre
+  im.src = src;
   _imgCache.set(src, im);
   return im;
 }
+
+// === FOND DE MAP (option A : dessiné dans le canvas) ===
+let _mapBgImg = null;
+let _mapBgReady = false;
+
+// function setMapBackground(src) {
+//   _mapBgReady = false;
+//   _mapBgImg = new Image();
+//   _mapBgImg.onload  = () => { _mapBgReady = true; };
+//   _mapBgImg.onerror = (e) => console.warn("Map BG failed:", src, e);
+//   _mapBgImg.src = src;
+// }
+
 function isReady(im) {
   return im && im.complete && im.naturalWidth > 0 && im.naturalHeight > 0;
 }
@@ -246,6 +478,14 @@ function isReady(im) {
       this.hp = START_HP;
       this.alive = true;
 
+            // facteurs (par défaut, la hitbox suit le visuel)
+      const visScale = (charDef.visualScale ?? 1);          // grossit juste l'image
+      const hitScale = (charDef.hitboxScale ?? visScale);   // grossit la collision
+
+      this.w = Math.round(BASE_PLAYER_W * hitScale);
+      this.h = Math.round(BASE_PLAYER_H * hitScale);
+
+
       //Wall
       this.lastWallTouchT = -9999; // dernier contact "proche mur"
       this.wallDir = 0;            // -1 = mur gauche, 1 = mur droit, 0 = aucun
@@ -264,7 +504,9 @@ function isReady(im) {
     get hurtbox() { return { x: this.x, y: this.y, w: this.w, h: this.h }; }
 
     applyDamage(amount, kbX, kbY) {
-      if (this.blocking) amount *= (1 - BLOCK_REDUCTION);
+      if (this.blocking) {
+        return;
+      };
       this.hp = clamp(this.hp - amount, 0, START_HP);
       this.hitTimer = 100;
       // knockback
@@ -299,20 +541,50 @@ function isReady(im) {
       };
     }
 
-   tryProjectile(t) {
+//    tryProjectile(t) {
+//   if (t - this.lastProjT < PROJECTILE_CD) return null;
+//   this.lastProjT = t;
+
+//   const dir = this.facing || 1;
+//   const spawnOffsetX = dir > 0 ? this.w : -PROJ.w; // spawn devant le joueur
+//   const spawnY = this.y + this.h * 0.55;
+
+//   return {
+//     owner: this,
+//     x: this.x + spawnOffsetX,
+//     y: spawnY,
+//     w: PROJ.w,
+//     h: PROJ.h,
+//     vx: dir * PROJ.speed,
+//     vy: 0,
+//     dmg: PROJ.dmg,
+//     kb: PROJ.kb,
+//     ttl: 2000 // ms
+//   };
+// }
+ 
+tryProjectile(t) {
   if (t - this.lastProjT < PROJECTILE_CD) return null;
   this.lastProjT = t;
 
   const dir = this.facing || 1;
-  const spawnOffsetX = dir > 0 ? this.w : -PROJ.w; // spawn devant le joueur
-  const spawnY = this.y + this.h * 0.55;
+
+  // Taille du projectile
+  const projW = PROJ.w;
+  const projH = PROJ.h;
+  const projR = Math.max(projW, projH) / 2;  // rayon hitbox centré
+
+  // Position de spawn (centre)
+  const spawnX = this.x + (dir > 0 ? this.w : 0) + dir * projW/2;
+  const spawnY = this.y + this.h * 0.55; // centre vertical du projectile
 
   return {
     owner: this,
-    x: this.x + spawnOffsetX,
-    y: spawnY,
-    w: PROJ.w,
-    h: PROJ.h,
+    x: spawnX,   // 👉 centre X
+    y: spawnY,   // 👉 centre Y
+    w: projW,
+    h: projH,
+    r: projR,    // 👉 pour collisions + debug hitbox
     vx: dir * PROJ.speed,
     vy: 0,
     dmg: PROJ.dmg,
@@ -320,7 +592,10 @@ function isReady(im) {
     ttl: 2000 // ms
   };
 }
- 
+
+
+
+
 updatePhysics() {
   const nowT = performance.now();
 
@@ -495,7 +770,23 @@ if (this.jumpQueued) {
 
   // ---------- Screens helpers ----------
   function show(el) { el.classList.remove('hidden'); }
-  function hide(el) { el.classList.add('hidden'); }
+  function hide(el) {
+  if (el) el.classList.add('hidden');
+}
+
+function enterBattleUI() {
+  document.getElementById('game')?.classList.remove('hidden');
+  document.getElementById('game')?.classList.add('is-playing');
+  // ❗ On montre la .game-map (puisqu’on l’utilise pour le fond)
+  document.querySelector('.game-map')?.classList.remove('hidden');
+}
+
+function leaveBattleUI() {
+  const cv = document.getElementById('game');
+  cv?.classList.remove('is-playing');
+  // si tu veux re-cacher le canvas en quittant le match, décommente :
+  // cv?.classList.add('hidden');
+}
 
   function goMenu() {
     hide(elSelect); hide(elHUD); hide(elHelp); hide(elOverlay);
@@ -510,19 +801,22 @@ if (this.jumpQueued) {
   }
 
   // Build character grid
- function buildCharGrid(host, clickHandler) {
+function buildCharGrid(host, clickHandler) {
+  if (!host) {                 // ✅ garde-fou
+    console.warn('buildCharGrid: host manquant');
+    return;
+  }
   host.innerHTML = '';
   ROSTER.forEach(char => {
     const d = document.createElement('div');
     d.className = 'char';
     d.dataset.id = char.id;
 
-    const thumbUrl = char.sprites?.idle || null;  // ✅ utilise le sprite comme vignette
+    const thumbUrl = char.sprites?.idle || null;
     d.innerHTML = `
       <div class="thumb" style="${thumbUrl ? `background-image:url('${thumbUrl}')` : `background:${char.color}`}"></div>
       <div class="label">${char.name}</div>
     `;
-
     d.addEventListener('click', ()=> clickHandler(char, d));
     host.appendChild(d);
   });
@@ -534,7 +828,7 @@ if (this.jumpQueued) {
   function goSelect() {
     awaitingPick = 1; p1Char = null; p2Char = null;
     p1PickEl.textContent = '—'; p2PickEl.textContent = '—';
-    btnStartMatch.disabled = true;
+    btnEndSelection.disabled = true;
     buildCharGrid(charGrid, (char, el) => {
       if (awaitingPick === 1) {
         p1Char = char; p1PickEl.textContent = char.name;
@@ -543,7 +837,7 @@ if (this.jumpQueued) {
         awaitingPick = 2;
       } else if (awaitingPick === 2) {
         p2Char = char; p2PickEl.textContent = char.name;
-        btnStartMatch.disabled = false;
+        btnEndSelection.disabled = false;
       }
     });
 
@@ -937,28 +1231,51 @@ function update(dt) {
     p.ttl -= dt;
     if (p.ttl <= 0) { projectiles.splice(i,1); continue; }
 
-    // déplacement
+    // déplacement (x,y sont le CENTRE)
     p.x += p.vx;
     p.y += p.vy;
 
-    // collision joueurs (pas le tireur)
+    // ==== collisions avec joueurs (pas le tireur) ====
     const targets = [p1, p2];
     for (const t of targets) {
       if (t === p.owner) continue;
-      if (p.x < t.x + t.w && p.x + p.w > t.x && p.y < t.y + t.h && p.y + p.h > t.y) {
+
+      let hit = false;
+
+      if (p.r) {
+        // cercle (proj) vs AABB (joueur)
+        const cx = p.x, cy = p.y, r = p.r;
+        const rx = t.x, ry = t.y, rw = t.w, rh = t.h;
+        // clamp centre sur le rectangle
+        const qx = Math.max(rx, Math.min(cx, rx + rw));
+        const qy = Math.max(ry, Math.min(cy, ry + rh));
+        const dx = cx - qx, dy = cy - qy;
+        hit = (dx*dx + dy*dy) <= r*r;
+      } else {
+        // AABB (proj, centré) vs AABB (joueur)
+        const pw = p.w || 12, ph = p.h || 12;
+        const px = p.x - pw/2, py = p.y - ph/2; // top-left réel
+        hit = (px < t.x + t.w && px + pw > t.x && py < t.y + t.h && py + ph > t.y);
+      }
+
+      if (hit) {
         const dir = Math.sign(p.vx) || 1;
-        t.applyDamage(p.dmg, dir*(9 + p.kb), -4); // kb horizontal + petit lift
+        t.applyDamage(p.dmg, dir*(9 + p.kb), -4);
         projectiles.splice(i,1);
         break;
       }
     }
 
-    // murs/bords écran
-    if (p.x + p.w < 0 || p.x > W || p.y + p.h < 0 || p.y > H) {
+    // ==== sortie écran (avec x,y centrés) ====
+    const pw = p.w || (p.r ? p.r*2 : 12);
+    const ph = p.h || (p.r ? p.r*2 : 12);
+    const px = p.x - pw/2, py = p.y - ph/2;
+    if (px + pw < 0 || px > W || py + ph < 0 || py > H) {
       projectiles.splice(i,1);
     }
   }
 }
+
 
 
   function endRound(who) {
@@ -977,56 +1294,92 @@ function update(dt) {
 
   // ---------- Render ----------
   function draw() {
-    // Clear
-    ctx.clearRect(0,0,W,H);
+  // Nettoie la frame
+  ctx.clearRect(0, 0, W, H);
+  // Reset du contexte (au cas où un rendu précédent a changé l'état)
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.imageSmoothingEnabled = true;
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#000';
+  ctx.strokeStyle = '#000';
 
-    // Background
-    // simple gradient sky
-    const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#0b1c2e'); g.addColorStop(1,'#0a0d13');
-    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+ 
 
-    // Ground
-    ctx.fillStyle = '#2d2f3b';
-    ctx.fillRect(0,GROUND_Y, W, H-GROUND_Y);
-    ctx.fillStyle = '#212432';
-    ctx.fillRect(0,GROUND_Y, W, 8);
+  // =====================
+  // 2) SOL
+  // =====================
+  ctx.fillStyle = '#2d2f3b';
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+  ctx.fillStyle = '#212432';
+  ctx.fillRect(0, GROUND_Y, W, 8);
 
-    // Platforms
+  // =====================
+  // 3) PLATEFORMES
+  // =====================
+  if (Array.isArray(PLATFORMS)) {
     ctx.fillStyle = '#3a3f51';
     for (const p of PLATFORMS) {
       ctx.fillRect(p.x, p.y, p.w, p.h);
+      // petite lèvre sombre
       ctx.fillStyle = 'rgba(0,0,0,.25)';
       ctx.fillRect(p.x, p.y, p.w, 4);
       ctx.fillStyle = '#3a3f51';
     }
+  }
 
-    if (state === S.BATTLE && p1 && p2) {
-      // projectiles
-     for (const pr of projectiles) {
-  const src = pr.owner?.char?.sprites?.projectile;
-  const img = getCachedImage(src);
-  if (isReady(img)) {
-    ctx.save();
-    // flip miroir si le projectile part vers la gauche
-    if (pr.vx < 0) {
-      ctx.translate(pr.x + pr.w/2, pr.y + pr.h/2);
-      ctx.scale(-1, 1);
-      ctx.drawImage(img, -pr.w/2, -pr.h/2, pr.w, pr.h);
-    } else {
-      ctx.drawImage(img, pr.x, pr.y, pr.w, pr.h);
+   
+    // =====================
+  // 4) PROJOS / EFFETS
+  // =====================
+if (state === S.BATTLE && p1 && p2 && Array.isArray(projectiles)) {
+  for (const pr of projectiles) {
+    ctx.save(); // isole les changements pour ce projectile
+
+    let drawn = false;
+
+    // Sprite projectile (défini dans le roster du perso)
+    const projSprite = pr.owner?.char?.sprites?.projectile;
+    if (projSprite) {
+      try {
+        // dessine le sprite centré sur pr.x / pr.y , const w/h taille
+        const w = pr.w || 24 ;
+        const h = pr.h || 24 ;
+        ctx.drawImage(getCachedImage(projSprite), pr.x - w/2, pr.y - h/2, w, h);
+        drawn = true;
+      } catch(e) {
+        console.warn("Erreur draw projectile:", e);
+      }
     }
-    ctx.restore();
-  } else {
-    // fallback visible
-    ctx.fillStyle = '#9de1ff';
-    ctx.fillRect(pr.x, pr.y, pr.w, pr.h);
+
+    // Fallback si aucun sprite affiché
+    if (!drawn) {
+      const r = pr.r || 6;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath();
+      ctx.arc(pr.x, pr.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.stroke();
+    }
+
+    ctx.restore(); // restaure l’état (ne touche pas aux joueurs)
   }
 }
 
-//DEBUUUUUUUUUUUUUUUG
-  // Dans draw():
-if (DEBUG_HITBOX && state === S.BATTLE) {
+
+
+  // =====================
+  // 5) JOUEURS
+  // =====================
+  if (state === S.BATTLE) {
+    if (p1 && typeof drawPlayer === 'function') drawPlayer(p1);
+    if (p2 && typeof drawPlayer === 'function') drawPlayer(p2);
+  }
+
+
+  //debug
+  if (DEBUG_HITBOX && state === S.BATTLE) {
   // hurtboxes joueurs
   ctx.strokeStyle = 'rgba(0,255,0,0.8)';
   ctx.strokeRect(p1.x, p1.y, p1.w, p1.h);
@@ -1038,17 +1391,25 @@ if (DEBUG_HITBOX && state === S.BATTLE) {
 
   // projectiles
   ctx.strokeStyle = 'rgba(0,200,255,0.8)';
-  for (const pr of projectiles) ctx.strokeRect(pr.x, pr.y, pr.w, pr.h);
+ for (const pr of projectiles) {
+  ctx.beginPath();
+  if (pr.r) {
+    ctx.arc(pr.x, pr.y, pr.r, 0, Math.PI*2);
+    ctx.stroke();
+  } else {
+    const pw = pr.w || 12, ph = pr.h || 12;
+    ctx.strokeRect(pr.x - pw/2, pr.y - ph/2, pw, ph);
+  }
 }
 
-      // players
-      drawPlayer(p1);
-      drawPlayer(p2);
+}
 
-      // debug hitboxes (optionnel)
-      hitboxes.forEach(h => { ctx.strokeStyle = 'rgba(255,0,0,.5)'; ctx.strokeRect(h.x,h.y,h.w,h.h); });
-    }
-  }
+      
+  
+
+  // (le HUD est en DOM, pas besoin ici)
+}
+
 
   // debug flip-reset
 // const mark = (pl)=>{
@@ -1065,13 +1426,6 @@ if (DEBUG_HITBOX && state === S.BATTLE) {
 function spriteKeyFor(p, tNow) {
   // ordre de priorité : block > attack > air > run > idle
   if (p.blocking) return 'block';
-  // if (tNow - (p.lastAttackT || 0) < (typeof ATTACK_ANIM_MS !== 'undefined' ? ATTACK_ANIM_MS : 180)) {
-  //  if (p.lastAttackT && p.char?.sprites?.[p.lastAttackT]) {
-  //   console.log(p.lastAttackT);
-  //   return p.lastAttackT;
-  // }
-  // return 'attack';
-  //  }
 
   // --- Affichage coup récent (kick/upper/punch) ---
 const lastT  = (p.lastAttackT ?? p.lastAttackTime ?? 0);     // ← compat: 2 noms possibles
@@ -1103,23 +1457,34 @@ function drawPlayer(p) {
   const img = getCachedImage(src);
 
   // ✅ flip miroir si on regarde à gauche
-  // on applique l'échelle AVANT de dessiner l'image
   if (p.facing === -1) {
     ctx.scale(-1, 1);  // miroir horizontal
   }
 
+ // taille de rendu basée sur la base * visualScale
+const visScale = p.char.visualScale || 1;
+const vw = Math.round(BASE_PLAYER_W * visScale);
+const vh = Math.round(BASE_PLAYER_H * visScale);
+
+if (isReady(img)) {
+  ctx.drawImage(img, -vw/2, -vh/2, vw, vh);
+} else {
+  ctx.fillStyle = p.char.color || '#9de1ff';
+  roundRect(ctx, -vw/2, -vh/2, vw, vh, 10, true);
+}
+
   if (isReady(img)) {
-    // on dessine TOUJOURS l'image avec des dimensions positives,
-    // car le flip est déjà géré par scale(-1,1)
-    ctx.drawImage(img, -p.w/2, -p.h/2, p.w, p.h);
+    // dessine l’image avec dimensions positives (flip déjà géré)
+    ctx.drawImage(img, -vw/2, -vh/2, vw, vh);
   } else {
     // fallback visible le temps de chargement
     ctx.fillStyle = p.char.color || '#9de1ff';
-    roundRect(ctx, -p.w/2, -p.h/2, p.w, p.h, (typeof s==='function'? s(10):10), true);
+    roundRect(ctx, -vw/2, -vh/2, vw, vh, 10, true);
   }
 
   ctx.restore();
 }
+
 
 
 
@@ -1156,9 +1521,42 @@ function drawPlayer(p) {
   btnHelpBack.addEventListener('click', goMenu);
 
   btnBackMenu.addEventListener('click', goMenu);
-  btnStartMatch.addEventListener('click', ()=>{
-    if (p1Char && p2Char) startBattle(p1Char, p2Char, /*tournament*/false);
-  });
+btnEndSelection.addEventListener('click', () => {
+  elSelect.classList.add('hidden');        // cacher l’écran persos
+  screenMap.classList.remove('hidden');    // montrer l’écran map
+
+  if (!track.children.length) buildCarousel();
+  snapTo(0, false);
+});
+
+
+// Retour à la sélection des persos
+back.addEventListener('click', ()=>{
+  screenMap.classList.add('hidden');
+  elSelect.classList.remove('hidden');
+});
+
+play.addEventListener('click', ()=>{
+  const chosen = MAPS[currentSlide];
+
+  // 👉 applique le fond directement au div .game-map
+  const gameMapEl = document.querySelector('.game-map');
+  if (gameMapEl) {
+    gameMapEl.style.backgroundImage = `url(assets/map/${chosen})`;
+    gameMapEl.style.backgroundSize = 'cover';
+    gameMapEl.style.backgroundPosition = 'center';
+    gameMapEl.style.backgroundRepeat = 'no-repeat';
+  }
+
+  // cache l’écran map et lance le match
+  screenMap.classList.add('hidden');
+  startBattle(p1Char, p2Char, false);
+});
+
+
+
+
+
 
   // Overlay buttons
   btnRematch.addEventListener('click', ()=>{
@@ -1181,18 +1579,19 @@ function drawPlayer(p) {
   btnMenu.addEventListener('click', goMenu);
 
   // Tournament buttons
-  btnTPlayers.addEventListener('click', ()=>{
-    tSize = clamp(parseInt(inputTSize.value,10)||8, 2, 16);
-    inputTSize.value = tSize;
-    goTournamentSelect();
-  });
-  btnTBack.addEventListener('click', goMenu);
-  btnTStart.addEventListener('click', goTournamentView);
-  btnTExit.addEventListener('click', goMenu);
+  // btnTPlayers.addEventListener('click', ()=>{
+  //   tSize = clamp(parseInt(inputTSize.value,10)||8, 2, 16);
+  //   inputTSize.value = tSize;
+  //   goTournamentSelect();
+  // });
+  // btnTBack.addEventListener('click', goMenu);
+  // btnTStart.addEventListener('click', goTournamentView);
+  // btnTExit.addEventListener('click', goMenu);
 
   // Build initial selection grids
   buildCharGrid(charGrid, ()=>{});
   buildCharGrid(tGrid, ()=>{});
+
 
   // Start
   goMenu();

@@ -52,10 +52,10 @@ h2 { margin-top: 0; font-size: 28px; }
 .char.selected { outline: 3px solid var(--accent2); }
 .char .label { position:absolute; bottom:8px; left:10px; font-weight:700; opacity:.8; }
 .char .thumb {
-  width: 120px;                /* taille de la vignette */
-  height: 120px;
+  width: 150px;                /* taille de la vignette */
+  height: 124px;
   border-radius: 12px;
-  background-size: 60px 100px; /* taille sprite ecran de selection */
+  background-size: 124px 124px; /* taille sprite ecran de selection */
   background-position: center;  /* centre bien */
   background-repeat: no-repeat;
   image-rendering: pixelated;   /* ✅ évite le flou, conserve les pixels nets */
@@ -84,6 +84,18 @@ h2 { margin-top: 0; font-size: 28px; }
 .hb .name { font-weight: 700; margin-bottom: 6px; }
 .hb .bar { width: 100%; height: 16px; background: #2a2f3d; border-radius: 10px; overflow: hidden; outline: 1px solid rgba(255,255,255,.06); }
 .hb .fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--ok), #ffe066, var(--danger)); transform-origin: left center; }
+/* Joueur de droite (normal) */
+#p2-hp {
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--danger), #ffe066, var(--ok));
+}
+
+/* Joueur de gauche (inversée) */
+#p1-hp {
+  transform-origin: right center;
+  background: linear-gradient(90deg, var(--ok), #ffe066, var(--danger));
+}
+
 
 #game {
   position: fixed;  /* occupe tout l’écran */
@@ -119,3 +131,81 @@ h2 { margin-top: 0; font-size: 28px; }
   padding: 8px; background: rgba(0,0,0,.25); border-radius: 10px; margin: 6px 0;
 }
 .match .vs { opacity:.7; margin: 0 8px; }
+
+/* Partie selection de map */
+/* Gestion des écrans */
+/* .screen { display: none; }
+.screen.active { display: block; } */
+
+/* Écran map plein largeur */
+
+#screen-map {
+  padding: 20px 16px 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.map-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.map-header h2 { margin: 0; }
+
+.ghost {
+  background: transparent; border: 1px solid rgba(255,255,255,.15);
+  color: #cfd6e6; border-radius: 10px; padding: 8px 12px; cursor: pointer;
+}
+
+/* Carrousel */
+/* même logique que tes autres écrans */
+.screen.hidden { display:none; }
+
+/* header */
+.map-header{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px}
+.ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:#cfd6e6;border-radius:10px;padding:8px 12px;cursor:pointer}
+
+/* carrousel */
+.map-track-wrap{position:relative;margin:8px 0}
+.map-track{
+  display:grid;grid-auto-flow:column;grid-auto-columns:min(80vw,780px);
+  height:min(52vh,560px);gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scroll-padding:24px;padding:10px 24px 12px;border-radius:16px
+}
+.map-track::-webkit-scrollbar{display:none}
+.map-slide{position:relative;border-radius:16px;overflow:hidden;scroll-snap-align:center;
+  transform:scale(.92);transition:transform .25s, box-shadow .25s, outline-color .25s;outline:2px solid transparent;background:#0f1320}
+.map-slide.is-active{transform:scale(1);outline-color:#ffe066;box-shadow:0 16px 48px rgba(0,0,0,.45)}
+.map-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.map-caption{position:absolute;left:12px;bottom:10px;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:10px;font-weight:700;font-size:14px}
+
+.map-arrow{position:absolute;top:50%;translate:0 -50%;width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(180deg,#384054,#2a3042);border:1px solid rgba(255,255,255,.08);
+  color:#fff;font-size:26px;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#map-prev{left:6px} #map-next{right:6px}
+
+.map-dots{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.map-dot{width:8px;height:8px;border-radius:999px;background:#647089;opacity:.5;transition:all .2s}
+.map-dot.is-active{opacity:1;width:18px;background:#ffe066}
+
+.map-footer{display:flex;justify-content:center;margin-top:12px}
+.map-play{padding:12px 26px;font-weight:800;font-size:18px;border:none;border-radius:12px;cursor:pointer;
+  color:#151922;background:linear-gradient(90deg,#ffe066,#ff9a3c);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+
+/* fond de map derrière le canvas */
+.game-map{
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;              /* derrière le canvas */
+  pointer-events: none;    /* ne bloque aucun clic/bouton */
+}
+
+/* le canvas doit rester au-dessus */
+#game{
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
