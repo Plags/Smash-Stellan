@@ -9,6 +9,9 @@
  */
 
 (() => {
+  //---------- Debug ----------
+
+
   // ---------- Core constants ----------
   const W = 1280,
     H = 720;
@@ -34,7 +37,11 @@
   const MOVE_SPEED = 3.0;
   const JUMP_VY = -16;
   const DOUBLE_JUMP_VY = -16;
-  const ATTACK_COOLDOWN = 220; // ms general swing lock
+  const ATTACK_COOLDOWN = {
+  punch: 200,   // ms
+  // kick: 400,
+  // upper: 600
+};
   const PROJECTILE_CD = 850; // ms anti-spam
   const BLOCK_REDUCTION = 0.75; // 75% dmg reduction
   const UPPERCUT_LAUNCH = -15; // vertical launch
@@ -66,7 +73,7 @@
   // Projectile
   const PROJ = { w: 64, h: 64, speed: 6.5, dmg: 5, kb: 7 };
 
-  // World bounds (si on sort -> chute/KO)
+ 
   const OUT_MARGIN = 260;
 
   // Game states
@@ -120,6 +127,8 @@
     "toilette.png",
     "escalier.png",
     "daronne_ptf.png",
+    "calvicie.png",
+    "ex_robin.png"
   ];
 
   // ===== Elements écran map
@@ -348,6 +357,7 @@
         kick: "assets/martin/coup_pied_martin.png",
       },
     },
+
     {
       id: 8,
       name: "🎬 Triple J (GOLDOOOOR )🎬",
@@ -363,22 +373,41 @@
         kick: "assets/tripleJ/coup_pied_triplej.png",
       },
     },
-    //   {
-    // id:9,
-    // name: "Piggy 🐖",
-    // //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
-    // sprites: {
-    //      idle: "assets/martin/face_martin.png",
-    //      run: "assets/martin/cours_martin.png",
-    //      jump: "assets/martin/saut_martin.png",
-    //      attack: "assets/martin/coup_droit_martin.png",
-    //      block: "assets/martin/parade_martin.png",
-    //      projectile: "assets/martin/projectile_martin.png",
-    //      upper : "assets/martin/uppercut_martin.png",
-    //      kick:  "assets/martin/coup_pied_martin.png",
 
-    //    },
+      {
+    id:9,
+    name: "Piggy 🐖",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/piggy/face_piggy.png",
+         run: "assets/piggy/cours_piggy.png",
+         jump: "assets/piggy/saut_piggy.png",
+         attack: "assets/piggy/coup_poing_piggy.png",
+         block: "assets/piggy/parade_piggy.png",
+         projectile: "assets/piggy/projectile_piggy.png",
+         upper : "assets/piggy/uppercut_piggy.png",
+         kick:  "assets/piggy/coup_pied_piggy.png",
 
+       },
+      },
+
+      
+      {
+    id:9,
+    name: "GrosLombaire 🎲🏃‍➡️",
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
+    sprites: {
+         idle: "assets/lombaire/face_lombaire.png",
+         run: "assets/lombaire/cours_lombaire.png",
+         jump: "assets/lombaire/saut_lombaire.png",
+         attack: "assets/lombaire/coup_poing_lombaire.png",
+         block: "assets/lombaire/parade_lombaire.png",
+         projectile: "assets/lombaire/projectile.png",
+         upper : "assets/lombaire/uppercut_lombaire.png",
+         kick:  "assets/lombaire/coup_pied_lombaire.png",
+
+       },
+      },
     // },
 
     //   // les autres personnages restent placeholders
@@ -1485,6 +1514,7 @@ if (in2.block == false) {
     }
 
     //debug
+
     if (DEBUG_HITBOX && state === S.BATTLE) {
       // hurtboxes joueurs
       ctx.strokeStyle = "rgba(0,255,0,0.8)";
