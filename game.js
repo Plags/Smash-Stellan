@@ -14,10 +14,10 @@
 
   // ---------- Core constants ----------
   const W = 1280,
-    H = 720;
-  const G = 0.5; // gravité
-  const FRICTION = 0.8; // friction au sol
-  const MAX_FALL = 10;
+        H = 720;
+  const G = 1; // gravité
+  const FRICTION = 0.5; // friction au sol
+  const MAX_FALL = 20
   const GROUND_Y = H - 80;
 
   // Plateformes
@@ -43,7 +43,6 @@
   // upper: 600
 };
   const PROJECTILE_CD = 850; // ms anti-spam
-  const BLOCK_REDUCTION = 0.75; // 75% dmg reduction
   const UPPERCUT_LAUNCH = -15; // vertical launch
   const KNOCKBACK_BASE = 9;
   const ATTACK_ANIM_MS = 180;
@@ -82,9 +81,7 @@
     SELECT: "SELECT",
     HELP: "HELP",
     BATTLE: "BATTLE",
-    TOURNAMENT_SETUP: "TOURNAMENT_SETUP",
-    TOURNAMENT_SELECT: "TOURNAMENT_SELECT",
-    TOURNAMENT_VIEW: "TOURNAMENT_VIEW",
+
   };
 
   // ---------- Elements ----------
@@ -109,7 +106,6 @@
   const elOverlayText = $("#overlay-text");
 
   const btnVersus = $("#btn-versus");
-  const btnTournament = $("#btn-tournament");
   const btnHelp = $("#btn-help");
   const btnHelpBack = $("#btn-help-back");
 
@@ -139,7 +135,7 @@
   const next = document.getElementById("map-next");
   const back = document.getElementById("map-back");
   const play = document.getElementById("map-play");
-  const gameMapEl = document.querySelector(".game-map");
+  // const gameMapEl = document.querySelector(".game-map");
   document.getElementById("btn-back-menu").addEventListener("click", () => {
     // cache l’écran persos
     elSelect.classList.add("hidden");
@@ -160,19 +156,10 @@
   const elTSetup = $("#tournament-setup");
   const elTSelect = $("#tournament-select");
   const elTBracket = $("#tournament-bracket");
-  const inputTSize = $("#tournament-size");
-  const btnTPlayers = $("#btn-tournament-players");
-  const btnTBack = $("#btn-tournament-back");
-  const tInstr = $("#tournament-instructions");
   const tGrid = $("#tournament-char-grid");
-  const tPicked = $("#tournament-picked");
-  const btnTStart = $("#btn-tournament-start");
-  const tBracketDiv = $("#bracket");
-  const btnTExit = $("#btn-tournament-exit");
   const roundStatus = $("#round-status");
 
-  // CARROUSSEL MAP
-  // ===== Vars =====
+  // CARROUSSEL MAP //
   let currentSlide = 0;
 
   function buildCarousel() {
@@ -234,6 +221,8 @@
     if (best !== currentSlide) markActive(best);
   }
 
+
+
   // flèches + scroll
   prev.addEventListener("click", () => snapTo(Math.max(0, currentSlide - 1)));
   next.addEventListener("click", () =>
@@ -247,13 +236,15 @@
     },
     { passive: true }
   );
+ // FIN CARROUSSEL MAP //
 
-  // ---------- Character roster (11 placeholders) ----------
+
+  // ---------- Character roster ----------
+    //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
   const ROSTER = [
     {
       id: 1,
       name: "👃💵PTF💵👃",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/ptf/face_ptf.png",
         run: "assets/ptf/cours_ptf.png",
@@ -269,7 +260,6 @@
     {
       id: 2,
       name: "💩DRAKS💩",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/draks/face_draks.png",
         run: "assets/draks/cours_draks.png",
@@ -284,7 +274,6 @@
     {
       id: 3,
       name: "🏳️‍🌈~ROBIN~🏳️‍🌈",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/robin/face_robin.png",
         run: "assets/robin/cours_robin.png",
@@ -300,7 +289,6 @@
     {
       id: 4,
       name: "🍔PLAGS🍔",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/thomas/face_plags.png",
         run: "assets/thomas/cours_plags.png",
@@ -315,7 +303,6 @@
     {
       id: 5,
       name: "🐵 BEN 🐒",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/ben/face_ben.png",
         run: "assets/ben/cours_ben.png",
@@ -330,7 +317,6 @@
     {
       id: 6,
       name: "😡 DENIS 😡",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/denis/face_denis.png",
         run: "assets/denis/cours_denis.png",
@@ -345,7 +331,6 @@
     {
       id: 7,
       name: "🗡️HOZAFID SI IL JOUE PAS GAREN",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/martin/face_martin.png",
         run: "assets/martin/cours_martin.png",
@@ -361,7 +346,6 @@
     {
       id: 8,
       name: "🎬 Triple J (GOLDOOOOR )🎬",
-      //color: "#f50e0eff", // couleur fallback si sprite ne charge pas
       sprites: {
         idle: "assets/tripleJ/face_triplej.png",
         run: "assets/tripleJ/cours_triplej.png",
@@ -410,7 +394,7 @@
       },
     // },
 
-    //   // les autres personnages restent placeholders
+    //   // autre perso placeholder test
     //   ...Array.from({ length: 10 }).map((_, i) => ({
     //     id: i + 2,
     //     name: `Personnage ${i + 2}`,
@@ -418,7 +402,7 @@
     //   }))
   ];
 
-  // ---------- Input mapping ----------
+  // ---------- TOUCHES---------
   const Keys = {
     // Player1
     A: "KeyA",
@@ -456,26 +440,9 @@
     (e) => delete gamepads[e.gamepad.index]
   );
 
-  // --- Cache d'images simple pour éviter de recréer des Image() chaque frame
-  const _imgCache = new Map();
-  function getCachedImage(src) {
-    if (!src) return null;
-    if (_imgCache.has(src)) return _imgCache.get(src);
-    const im = new Image();
-    im.src = src;
-    _imgCache.set(src, im);
-    return im;
-  }
 
-  // === FOND DE MAP (option A : dessiné dans le canvas) ===
-  let _mapBgImg = null;
-  let _mapBgReady = false;
-
-  function isReady(im) {
-    return im && im.complete && im.naturalWidth > 0 && im.naturalHeight > 0;
-  }
-
-  function readGamepad(index) {
+//Fait fonctionner la manette 
+    function readGamepad(index) {
     const gp = navigator.getGamepads?.()[index];
     if (!gp) return null;
     const axes = gp.axes || [];
@@ -500,8 +467,27 @@
     };
   }
 
-  // ---------- Utility ----------
-  const now = () => performance.now();
+// ----------FIN TOUCHES---------
+
+
+// --- Cache d'images pour éviter de recréer des Image() chaque frame
+  const _imgCache = new Map();
+  function getCachedImage(src) {
+    if (!src) return null;
+    if (_imgCache.has(src)) return _imgCache.get(src);
+    const im = new Image();
+    im.src = src;
+    _imgCache.set(src, im);
+    return im;
+  }
+
+  function isReady(im) {
+    return im && im.complete && im.naturalWidth > 0 && im.naturalHeight > 0;
+  }
+//--- Fin cache d'image
+
+
+  // ---------- Utility => Pas tout compris a voir ----------
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const rectsOverlap = (a, b) =>
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -548,6 +534,7 @@
       return { x: this.x, y: this.y, w: this.w, h: this.h };
     }
 
+//Dégats
     applyDamage(amount, kbX, kbY) {
       if (this.blocking) {
         return;
@@ -560,6 +547,7 @@
       if (this.hp <= 0) this.alive = false;
     }
 
+//Attack (Punch / kick / upper)
     tryAttack(type, inputs, t) {
       if (t - this.lastAttackT < ATTACK_COOLDOWN) return null;
       this.lastAttackT = t;
@@ -571,7 +559,7 @@
       if (type === "upper") return this.makeHitbox(HB_UPPER);
       return null;
     }
-
+//HitBox
     makeHitbox(spec) {
       const dir = this.facing;
       return {
@@ -587,28 +575,7 @@
       };
     }
 
-    //    tryProjectile(t) {
-    //   if (t - this.lastProjT < PROJECTILE_CD) return null;
-    //   this.lastProjT = t;
-
-    //   const dir = this.facing || 1;
-    //   const spawnOffsetX = dir > 0 ? this.w : -PROJ.w; // spawn devant le joueur
-    //   const spawnY = this.y + this.h * 0.55;
-
-    //   return {
-    //     owner: this,
-    //     x: this.x + spawnOffsetX,
-    //     y: spawnY,
-    //     w: PROJ.w,
-    //     h: PROJ.h,
-    //     vx: dir * PROJ.speed,
-    //     vy: 0,
-    //     dmg: PROJ.dmg,
-    //     kb: PROJ.kb,
-    //     ttl: 2000 // ms
-    //   };
-    // }
-
+//Projectile du personnage (Tout ce qui est configuration=> voir const projectile ou fonction draw()  )
     tryProjectile(t) {
       if (t - this.lastProjT < PROJECTILE_CD) return null;
       this.lastProjT = t;
@@ -638,6 +605,7 @@
         ttl: 2000, // ms
       };
     }
+
 
     updatePhysics() {
       const nowT = performance.now();
@@ -739,15 +707,6 @@
         // on ne reset que posé au sol, pour garder une petite tolérance en l'air
         this.wallDir = 0;
       }
-
-      // 6) Wall slide doux (facilite le timing)
-      // if (!this.onGround && (nearLeft || nearRight) && this.vy > 3) {
-      //   this.vy = 3;
-      // }
-
-      // 1) gravité -> 2) intégration -> 3) sol -> 4) plateformes (set onGround/canDouble)
-      // ... (détection murs/slide si tu veux)
-
       if (this.jumpQueued) {
         if (this.onGround) {
           // saut normal
@@ -761,9 +720,6 @@
         }
         this.jumpQueued = false;
       }
-
-      // 5) murs invisibles -> 6) friction -> timers
-
       // 8) Murs invisibles gauche/droite (empêche de sortir)
       if (this.x < 0) {
         this.x = 0;
@@ -774,28 +730,11 @@
         if (this.vx > 0) this.vx = 0;
       }
 
-      // (⚠️ ne remets pas un clamp global type: this.x = clamp(this.x, -OUT_MARGIN, W+...);
-      //  ça casserait la proximité mur et la fenêtre de wall-jump)
-
       // 9) Friction au sol
       if (this.onGround && Math.abs(this.vx) > 0.01) this.vx *= FRICTION;
 
       // 10) Timers
       if (this.hitTimer > 0) this.hitTimer -= dtMs;
-    }
-  }
-
-  class Projectile {
-    constructor(x, y, vx, vy, owner) {
-      this.x = x;
-      this.y = y;
-      this.vx = vx;
-      this.vy = vy;
-      this.owner = owner;
-      this.w = 16; // largeur sprite projectile
-      this.h = 16; // hauteur sprite projectile
-      this.alive = true;
-      this.bouncesLeft = 1; // ✅ autorisé à rebondir 1 fois
     }
   }
 
@@ -811,14 +750,6 @@
   let p1Char = null,
     p2Char = null;
 
-  // Tournament data
-  let tSize = 8;
-  let tPicks = []; // array of chosen char ids
-  let tIndexToPick = 0;
-  let bracket = []; // rounds: [ [match], [semis], [final] ]
-  let currentRound = 0;
-  let currentMatchIndex = 0;
-
   // ---------- Screens helpers ----------
   function show(el) {
     el.classList.remove("hidden");
@@ -827,19 +758,6 @@
     if (el) el.classList.add("hidden");
   }
 
-  function enterBattleUI() {
-    document.getElementById("game")?.classList.remove("hidden");
-    document.getElementById("game")?.classList.add("is-playing");
-    // ❗ On montre la .game-map (puisqu’on l’utilise pour le fond)
-    document.querySelector(".game-map")?.classList.remove("hidden");
-  }
-
-  function leaveBattleUI() {
-    const cv = document.getElementById("game");
-    cv?.classList.remove("is-playing");
-    // si tu veux re-cacher le canvas en quittant le match, décommente :
-    // cv?.classList.add('hidden');
-  }
 
   function goMenu() {
     hide(elSelect);
@@ -918,182 +836,6 @@
     state = S.SELECT;
   }
 
-  // Tournament setup
-  function goTournamentSetup() {
-    tSize = parseInt(inputTSize.value, 10) || 8;
-    tSize = clamp(tSize, 2, 16);
-    inputTSize.value = tSize;
-    tPicks = [];
-    tIndexToPick = 0;
-    hide(elMenu);
-    hide(elSelect);
-    show(elTSetup);
-    state = S.TOURNAMENT_SETUP;
-  }
-
-  function goTournamentSelect() {
-    tPicks = [];
-    tIndexToPick = 0;
-    tPicked.innerHTML = "";
-    btnTStart.disabled = true;
-    tInstr.textContent = `Joueur 1, choisis ton personnage`;
-    buildCharGrid(tGrid, (char, el) => {
-      tPicks.push(char.id);
-      const li = document.createElement("li");
-      li.textContent = `${char.name}`;
-      tPicked.appendChild(li);
-      tIndexToPick++;
-      if (tIndexToPick >= tSize) {
-        btnTStart.disabled = false;
-        tInstr.textContent = `Tous les joueurs sont inscrits.`;
-      } else {
-        tInstr.textContent = `Joueur ${
-          tIndexToPick + 1
-        }, choisis ton personnage`;
-      }
-    });
-    hide(elTSetup);
-    show(elTSelect);
-    state = S.TOURNAMENT_SELECT;
-  }
-
-  function powerOfTwoCeil(n) {
-    let p = 1;
-    while (p < n) p <<= 1;
-    return p;
-  }
-
-  function buildBracket(players) {
-    // players = array of char ids (length tSize)
-    // Fill to next power of two with byes (null)
-    const target = powerOfTwoCeil(players.length);
-    const padded = players.slice();
-    while (padded.length < target) padded.push(null);
-
-    // shuffle lightly so brackets differ
-    for (let i = padded.length - 1; i > 0; i--) {
-      const j = (Math.random() * (i + 1)) | 0;
-      [padded[i], padded[j]] = [padded[j], padded[i]];
-    }
-
-    // Round 0
-    let round = [];
-    for (let i = 0; i < padded.length; i += 2) {
-      round.push([padded[i], padded[i + 1]]);
-    }
-    const rounds = [round];
-
-    // Subsequent rounds built empty; winners pushed later
-    let size = round.length;
-    while (size > 1) {
-      size = (size / 2) | 0;
-      rounds.push(Array.from({ length: size }).map(() => [null, null]));
-    }
-    return rounds;
-  }
-
-  function renderBracket() {
-    tBracketDiv.innerHTML = "";
-    bracket.forEach((round, rIndex) => {
-      const rd = document.createElement("div");
-      rd.className = "round";
-      rd.innerHTML = `<div><strong>Round ${rIndex + 1}${
-        rIndex === bracket.length - 1 ? " (Finale)" : ""
-      }</strong></div>`;
-      round.forEach((m, i) => {
-        const [a, b] = m;
-        const div = document.createElement("div");
-        div.className = "match";
-        const an =
-          a == null
-            ? "(bye)"
-            : typeof a === "number"
-            ? ROSTER.find((c) => c.id === a)?.name
-            : a;
-        const bn =
-          b == null
-            ? "(bye)"
-            : typeof b === "number"
-            ? ROSTER.find((c) => c.id === b)?.name
-            : b;
-        div.innerHTML = `<span>${an}</span><span class="vs">vs</span><span>${bn}</span>`;
-        rd.appendChild(div);
-      });
-      tBracketDiv.appendChild(rd);
-    });
-  }
-
-  function goTournamentView() {
-    bracket = buildBracket(tPicks);
-    currentRound = 0;
-    currentMatchIndex = 0;
-    renderBracket();
-    roundStatus.textContent = `Round 1 — Match 1`;
-    hide(elTSelect);
-    show(elTBracket);
-    state = S.TOURNAMENT_VIEW;
-
-    // Sauter les matches avec bye automatiquement
-    setTimeout(() => advanceTournamentIfByes(), 60);
-  }
-
-  function advanceTournamentIfByes() {
-    while (state === S.TOURNAMENT_VIEW) {
-      const round = bracket[currentRound];
-      if (!round) break;
-      const match = round[currentMatchIndex];
-      if (!match) break;
-      const [a, b] = match;
-      if (a == null && b == null) {
-        setWinnerForCurrentMatch(null); // personne
-      } else if (a == null) {
-        setWinnerForCurrentMatch(b);
-      } else if (b == null) {
-        setWinnerForCurrentMatch(a);
-      } else {
-        // lancer un match normal
-        const charA = ROSTER.find((c) => c.id === a);
-        const charB = ROSTER.find((c) => c.id === b);
-        startBattle(charA, charB, /*tournamentMode*/ true);
-        break;
-      }
-    }
-  }
-
-  function setWinnerForCurrentMatch(winnerCharIdOrName) {
-    const round = bracket[currentRound];
-    const match = round[currentMatchIndex];
-    const nextRound = bracket[currentRound + 1];
-
-    if (!nextRound) {
-      // Finale terminée
-      roundStatus.textContent = `Tournoi terminé — Vainqueur: ${
-        winnerCharIdOrName == null
-          ? "(bye)"
-          : typeof winnerCharIdOrName === "number"
-          ? ROSTER.find((c) => c.id === winnerCharIdOrName)?.name
-          : winnerCharIdOrName
-      }`;
-      return;
-    }
-
-    // Déterminer la "case" du prochain round
-    const slot = (currentMatchIndex / 2) | 0;
-    if (!nextRound[slot]) nextRound[slot] = [null, null];
-    const seat = currentMatchIndex % 2 === 0 ? 0 : 1;
-    nextRound[slot][seat] = winnerCharIdOrName;
-
-    // Avancer l’index
-    currentMatchIndex++;
-    if (currentMatchIndex >= round.length) {
-      currentRound++;
-      currentMatchIndex = 0;
-    }
-    renderBracket();
-    roundStatus.textContent = `Round ${currentRound + 1} — Match ${
-      currentMatchIndex + 1
-    }`;
-  }
 
   // ---------- Match flow ----------
   function startBattle(charA, charB, tournamentMode = false) {
@@ -1122,7 +864,6 @@
     isTournamentMatch = tournamentMode;
   }
 
-  let isTournamentMatch = false;
 
   // ---------- Controls per player ----------
   function readInputsForPlayer(slot) {
@@ -1171,21 +912,6 @@
   }
 
   const FLIP_RESET_COOLDOWN = 1000;
-  const RESET_SENSOR_PX = 20;
-  const RESET_LOOKAHEAD_PX = 28;
-
-  function nearWallForReset(p) {
-    const distL = p.x;
-    const distR = W - (p.x + p.w);
-    const towardL = p.vx < -0.1;
-    const towardR = p.vx > 0.1;
-    const look = Math.max(RESET_LOOKAHEAD_PX, Math.min(60, Math.abs(p.vx) * 6));
-    const nearNow = distL <= RESET_SENSOR_PX || distR <= RESET_SENSOR_PX;
-    const nearSoon =
-      (towardL && distL <= RESET_SENSOR_PX + look) ||
-      (towardR && distR <= RESET_SENSOR_PX + look);
-    return nearNow || nearSoon;
-  }
 
   // mémorise les états de touches/boutons par joueur
   const _pressLatch = {};
@@ -1215,10 +941,6 @@
     const gp2 = readGamepad(1);
     in1 = mergeWithGamepad(in1, gp1);
     in2 = mergeWithGamepad(in2, gp2);
-
-    // --- justPressed helper requis une seule fois dans le fichier ---
-    // const _pressLatch = {};
-    // function justPressed(isDown, key){ if(!_pressLatch[key]) _pressLatch[key]=false; const jp=!!isDown&&!_pressLatch[key]; _pressLatch[key]=!!isDown; return jp; }
 
     // Queue du saut (✅ simple : on ne fait que poser jumpQueued ici)
     const jp1 = justPressed(!!in1.jump, "p1_jump");
@@ -1296,8 +1018,6 @@ if (in2.block == false) {
     if (!p1.alive || out1) endRound(2);
     else if (!p2.alive || out2) endRound(1);
   }
-
-  // Orienter en fonction de l
 
   // Handle single-press jump semantics
   const jumpLatch = { p1: false, p2: false };
@@ -1701,51 +1421,12 @@ if (in2.block == false) {
   });
   btnMenu.addEventListener("click", goMenu);
 
-  // Tournament buttons
-  // btnTPlayers.addEventListener('click', ()=>{
-  //   tSize = clamp(parseInt(inputTSize.value,10)||8, 2, 16);
-  //   inputTSize.value = tSize;
-  //   goTournamentSelect();
-  // });
-  // btnTBack.addEventListener('click', goMenu);
-  // btnTStart.addEventListener('click', goTournamentView);
-  // btnTExit.addEventListener('click', goMenu);
-
   // Build initial selection grids
-  buildCharGrid(charGrid, () => {});
-  buildCharGrid(tGrid, () => {});
+  // buildCharGrid(charGrid, () => {});
+  // buildCharGrid(tGrid, () => {});
 
   // Start
   goMenu();
   requestAnimationFrame(loop);
 
-  // ---------- SPRITES — où brancher vos assets ----------
-
-  // 1) Pour chaque perso du ROSTER, ajoutez des chemins sprites :
-
-  /*
-    2) Chargez les images au chargement si vous voulez (ex):
-       const IMG = {};
-       function loadImage(path){ return new Promise(res=>{ const im = new Image(); im.src=path; im.onload=()=>res(im); });}
-       async function preload() {
-         for (const c of ROSTER) {
-           if (!c.sprites) continue;
-           IMG[c.id] = {};
-           for (const [k,p] of Object.entries(c.sprites)) {
-             IMG[c.id][k] = await loadImage(p);
-           }
-         }
-       }
-       // puis avant requestAnimationFrame(loop), appelez await preload()
-
-    3) Dans drawPlayer(), remplacez le rectangle par un drawImage sur l’animation
-       qui correspond à l’état (idle/run/jump/block/attack).
-       Exemple simplifié:
-         const img = IMG[p.char.id]?.idle;
-         if (img) ctx.drawImage(img, -w/2, -h/2, w, h);
-       Vous pouvez gérer des spritesheets (sx,sy,sw,sh,dx,dy,dw,dh) si besoin.
-
-    4) Projectile:
-       Dans draw(), remplacez le rectangle projectile par drawImage(IMG[p.owner.char.id]?.projectile, ...)
-  */
 })();
